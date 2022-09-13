@@ -1,29 +1,95 @@
 import React, { useContext, useState, useCallback } from 'react'
-import { View, Text, StyleSheet, ScrollView } from 'react-native'
+import { View, Text, StyleSheet, ActivityIndicator} from 'react-native'
 import { useFocusEffect } from '@react-navigation/native'
 import { TextInput, IconButton, Button } from 'react-native-paper'
 import { DateTimePickerAndroid} from '@react-native-community/datetimepicker'
 import moment from 'moment'
+import 'moment/locale/pt-br'
 
 import { ConsultationContext } from '@context/Consultation'
+import { AuthContext } from '@context/Auth'
 import ModalComp from '@components/ModalComp'
 import VetQuery from '@components/VetQuery'
-
+import axios from 'axios'
+import { server } from '../../api'
 
 export default () => {
     const { consultation } = useContext(ConsultationContext)
-
-    const [state, setState] = useState(consultation)
+    const { user } = useContext(AuthContext)
+    const [state, setState] = useState({...consultation})
     const [editField, setEditField] = useState(false)
     const [editableButton, setEditableButton] = useState(true)
     const [newConsultation, setNewConsultation] = useState(false)
     const [appointDate, setAppointDate] = useState(new Date())
     const [appointTime, setAppointTime] = useState(new Date())
+    const [isLoading, setIsLoading] = useState(false)
 
     const [showModal, setShowModal] = useState(false)
 
-    const stringDateFormated = '__/__/'
-    const stringTimeFormated = '  :  '
+    const stringDateFormated = newConsultation ? '__/___/' : moment(new Date(consultation.consultationDateTime)).format('DD/MMM')
+    const stringTimeFormated = newConsultation ? '   :  ' : moment(new Date(consultation.consultationDateTime)).format('HH:mm')
+
+    const addConsultation = async () => {
+        const consultationDateTime = setupDateTime()
+        
+        try {
+            setIsLoading(true)
+            const res = await axios.post(`${server}/consultation`, {
+                consultationDateTime: consultationDateTime,
+                idPet: state.idPet,
+                idVet: state.idVet,
+                price: state.price,
+                status: 'Agendada',
+            })
+            if (res.status === 200) {
+                console.warn('Consulta registrada')
+                defaultValues()
+            }
+            setIsLoading(false)
+        }
+        catch(e) {
+            console.warn(e)
+            setIsLoading(false)
+        }
+    }
+    const updateConsultation = async () => {
+        try {
+            setIsLoading(true)
+            const res = await axios.put(`${server}/consultation`, {
+                consultationDateTime: state.consultationDateTime,
+                idPet: state.idPet,
+                idVet: state.idVet,
+                price: state.price,
+                status: state.status,
+            })
+            if (res.status === 200) {
+                console.warn('Consulta atualizada')
+                defaultValues()
+            }
+            setIsLoading(false)
+        }
+        catch(e) {
+            console.warn(e)
+            setIsLoading(false)
+        }
+    }
+    const deleteConsultation = async () => {
+        try {
+            setIsLoading(true)
+            const res = await axios.delete(`${server}/consultation/
+                ${state.consultationDateTime}/${state.idPet}/${state.idVet}`)
+            if (res.status === 200) {
+                console.warn('Consulta Deletada')
+                defaultValues()
+                setState({})
+            }
+            setIsLoading(false)
+        }
+        catch(e) {
+            console.warn(e)
+            setIsLoading(false)
+        }
+    }
 
 
     const defaultValues = () => {
@@ -40,11 +106,17 @@ export default () => {
     useFocusEffect(
         useCallback(() => {
             Object.keys(state).length > 0 ? defaultValues() : newConsultationValues()
+            // set date case exists
+            // if (Object.keys(consultation).length > 0) {
+            //     setAppointDate(new Date(state.consultationDateTime))
+            //     setAppointTime(new Date(state.consultationDateTime))
+            //     console.log(appointDate, appointTime)
+            // } 
         },[])
     )
 
     // returns the date with the time setup
-    const setupDateTime = (appointTime, appointDate) => {
+    const setupDateTime = () => {
         // alterar para eceber estimeTime e o appointDate
         // convert the hours, minuts of the time to ms
         const time2Ms = 
@@ -55,8 +127,8 @@ export default () => {
     }
 
 
-    const selectedVet = (vetId) => {
-        console.log(vetId)
+    const selectedVet = (idVet, vetName) => {
+        console.log(idVet, vetName)
     }
 
     return (
@@ -65,32 +137,49 @@ export default () => {
                 onClose={() => setShowModal(false)} 
                 component={<VetQuery onClose={() => setShowModal(false)} onSelect={selectedVet} />} 
             />
-            <View style={styles.content}>
-                <View style={{ width: '100%', backgroundColor: 'green', padding: 5 }} >
+            {!newConsultation && !user.employeeType === 'Vet'
+                ? <View style={styles.deleteButton} >
+                    <IconButton
+                        icon='delete'
+                        color='red'
+                        size={25}
+                        onPress={() => {
+                            if (state.idPet && state.idPet !== '')
+                                deleteConsultation()
+                        }}
+                    />   
+                </View>
+                : null}
+                {isLoading
+                ? <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }} >
+                    <ActivityIndicator size='large' animating={isLoading} />
+                </View>
+                : <View style={styles.content}>
+                <View style={{ width: '100%', padding: 5 }} >
                     <View style={{ alignItems:'center' }} >
-                        <Text>Paciente</Text>
+                        <Text style={{ color:'#000', fontSize: 20, fontWeight:'bold' }}>Paciente</Text>
                     </View>
                     <View>
                         <View style={[styles.patitientView]}>
                             <View style={{ width: '50%' }}>
                                 <TextInput
-                                    disabled={editField}
+                                    disabled={newConsultation ? false : true}
                                     mode='outlined'
                                     label='ID'
                                     placeholder='235'
-                                    value={state.petId}
-                                    onChangeText={(petId) => setState({...state, petId})}
+                                    value={`${state.idPet}`}
+                                    onChangeText={(idPet) => setState({...state, idPet})}
                                     left={<TextInput.Icon name='account'/>}
                                 />
                             </View>
                             <View style={{ width: '50%' }}>
                                 <TextInput
-                                        disabled={editField}
+                                        disabled={true}
                                         mode='outlined'
                                         label='Raça'
                                         placeholder='Buldog'
-                                        value={state.petBreed}
-                                        onChangeText={(petBreed) => setState({...state, petBreed})}
+                                        value={state.breed}
+                                        onChangeText={(breed) => setState({...state, breed})}
                                         left={<TextInput.Icon name='account'/>}
                                     />
                             </View>
@@ -98,38 +187,38 @@ export default () => {
                         <View style={styles.patitientView}>
                             <View style={{ width: '100%' }}>
                                 <TextInput
-                                    disabled={editField}
+                                    disabled={true}
                                     mode='outlined'
                                     label='Nome'
                                     placeholder='Terror'
-                                    value={state.petName}
-                                    onChangeText={(petName) => setState({...state, petName})}
+                                    value={state.name}
+                                    onChangeText={(name) => setState({...state, name})}
                                     left={<TextInput.Icon name='account'/>}
                                 />
                             </View>
                         </View>
                     </View>
                 </View>
-                <View style={{ width: '100%', backgroundColor: 'yellow', marginTop:20 }}>
+                <View style={{ width: '100%', marginTop:20 }}>
                     <View style={{ alignItems:'center' }} >
-                            <Text>Veterinario</Text>
+                            <Text style={{ color:'#000', fontSize: 20, fontWeight:'bold' }}>Veterinario</Text>
                     </View>
                     <View>
                         <View style={styles.vetView}>
                             <View style={{ width: '50%' }}>
                                 <TextInput
-                                    disabled={editField}
+                                    disabled={newConsultation ? false : true}
                                     mode='outlined'
                                     label='ID'
                                     placeholder='235'
-                                    value={state.vetId}
-                                    onChangeText={(vetId) => setState({...state, vetId})}
+                                    value={`${state.idVet}`}
+                                    onChangeText={(idVet) => setState({...state, idVet})}
                                     left={<TextInput.Icon name='account'/>}
                                 />
                             </View>
                             <View style={{ width: '50%' }}>
                                 <TextInput
-                                    disabled={editField}
+                                    disabled={true}
                                     mode='outlined'
                                     label='Nome'
                                     placeholder='235'
@@ -140,9 +229,40 @@ export default () => {
                             </View>
                         </View>
                         <View>
-                            <Button onPress={() => setShowModal(true)} >
+                            <Button disabled={newConsultation ? false : true} onPress={() => setShowModal(true)} >
                                 Selecionar Veterinário
                             </Button>
+                        </View>
+                    </View>
+                </View>
+                <View style={{ width: '100%', marginTop:20 }}>
+                    <View style={{ alignItems:'center' }} >
+                            <Text style={{ color:'#000', fontSize: 20, fontWeight:'bold' }}>Consulta</Text>
+                    </View>
+                    <View>
+                        <View style={styles.vetView}>
+                            <View style={{ width: '50%' }}>
+                                <TextInput
+                                    disabled={!editField}
+                                    mode='outlined'
+                                    label='Preço'
+                                    placeholder='200'
+                                    value={`${state.price}`}
+                                    onChangeText={(price) => setState({...state, price})}
+                                    left={<TextInput.Icon name='account'/>}
+                                />
+                            </View>
+                            <View style={{ width: '50%' }}>
+                                <TextInput
+                                    disabled={!editField}
+                                    mode='outlined'
+                                    label='Status'
+                                    placeholder='Agendada'
+                                    value={state.status}
+                                    onChangeText={(status) => setState({...state, status})}
+                                    left={<TextInput.Icon name='account'/>}
+                                />
+                            </View>
                         </View>
                     </View>
                 </View>
@@ -151,30 +271,35 @@ export default () => {
                         <Text>Data/Hora</Text>
                     </View>
                     <View style={styles.dateView}>
-                        <Button mode='contained' icon='clock-time-nine' style={styles.dateButton} onPress={() => {
-                            DateTimePickerAndroid.open({
-                                value: appointTime,
-                                onChange: (_, time) => {
-                                    setAppointTime(new Date(time))
-                                    console.log(time)
-                                },
-                                is24Hour: true,
-                                mode: 'time',
-                            })
+                        <Button mode='contained' disabled={newConsultation ? false : true}
+                            icon='clock-time-nine' 
+                            style={styles.dateButton} 
+                            onPress={() => {
+                                DateTimePickerAndroid.open({
+                                    value: appointTime,
+                                    onChange: (_, time) => {
+                                        setAppointTime(new Date(time))
+                                        console.log(time)
+                                    },
+                                    is24Hour: true,
+                                    mode: 'time',
+                                })
                         }} >{stringTimeFormated}</Button>
-                        <Button mode='contained' icon='calendar-range' style={styles.dateButton} onPress={() => {
-                            DateTimePickerAndroid.open({
-                                value: appointDate,
-                                onChange: (_, date) => {
-                                    setAppointDate(new Date(date))
-                                    console.log(date)
-                                },
-                                mode: 'date',
-                            })
+                        <Button  disabled={newConsultation ? false : true} mode='contained' 
+                            icon='calendar-range' style={styles.dateButton} 
+                            onPress={() => {
+                                DateTimePickerAndroid.open({
+                                    value: appointDate,
+                                    onChange: (_, date) => {
+                                        setAppointDate(new Date(date))
+                                        console.log(date)
+                                    },
+                                    mode: 'date',
+                                })
                         }} >{stringDateFormated}</Button>
                     </View>
                 </View>
-                {editableButton
+                {editableButton && !user.employeeType === 'Vet'
                 ? <View style={styles.button} >
                     <IconButton
                         icon='pencil-circle'
@@ -185,7 +310,9 @@ export default () => {
                         }}
                     />
                 </View> 
-                : <View style={styles.doubleButton}>
+                : null}
+                {!editableButton && !user.employeeType === 'Vet'
+                ? <View style={styles.doubleButton}>
                     <IconButton
                         icon='close-circle'
                         size={50}
@@ -199,11 +326,15 @@ export default () => {
                         size={50}
                         onPress={() => {
                             defaultValues()
-                            // setState({})
+                            if (newConsultation) addConsultation()
+                            if (!newConsultation) updateConsultation()
                         }}
                     />
-                </View>}
-            </View>
+                </View>
+                : null}
+                
+            </View>}            
+            
         </View>
     )
 }
@@ -226,14 +357,14 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
     },
     vetView: {
-        backgroundColor: 'blue',
         width: '100%',
         flexDirection: 'row',
     },
     dateButton: {
         margin: 10, 
         borderRadius: 25,
-        backgroundColor: '#1081B6',
+        backgroundColor: '#4C11EA',
+        color: '#FFF',
     },
     dateView: {
         flexDirection: 'row', 

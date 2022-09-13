@@ -3,6 +3,7 @@ import {
     View,
     Text,
     StyleSheet,
+    TouchableOpacity,
 } from 'react-native'
 import {
     DrawerContentScrollView,
@@ -14,7 +15,7 @@ import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
 import { AuthContext } from '@context/Auth'
 
 export default props => {
-    const { user } = useContext(AuthContext)
+    const { user, setUser } = useContext(AuthContext)
     return (
         <View style={{ flex: 1 }}>
             <View style={styles.perfil}>
@@ -22,9 +23,9 @@ export default props => {
                     <Avatar.Icon size={80} icon='account'/>
                 </View>
                 <View style={styles.userInfo} >
-                    <Text style={styles.name}>user.name</Text>
-                    <Text style={styles.userInfoTxt}>user.email</Text>
-                    <Text style={styles.userInfoTxt}>ID: user.id</Text>
+                    <Text style={styles.name}>ID: {user.idEmployee} - {user.name}</Text>
+                    <Text style={styles.userInfoTxt}>{user.email}</Text>
+                    <Text style={styles.userInfoTxt}>{user.employeeType}</Text>
                 </View>
             </View>
             <View style={styles.menu}>
@@ -61,8 +62,10 @@ export default props => {
             </View>
             <View style={styles.bottom}>
                 <View style={{ flexDirection:'row', padding: 10, alignItems: 'center', justifyContent: 'space-between' }}>
-                    <Icon name='exit-to-app' color='#FFF' size={30}/>
-                    <Text style={{ color:'#FFF', fontWeight:'bold' }} >Sair</Text>
+                    <TouchableOpacity onPress={() => setUser({token: false})} >
+                        <Icon name='exit-to-app' color='#FFF' size={30}/>
+                        <Text style={{ color:'#FFF', fontWeight:'bold' }} >Sair</Text>
+                    </TouchableOpacity>
                 </View>
             </View>
         </View>

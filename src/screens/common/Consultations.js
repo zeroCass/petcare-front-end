@@ -1,28 +1,44 @@
 import React, { useContext, useCallback, useState } from 'react'
-import { View, Text, Button, FlatList, StyleSheet } from 'react-native'
+import { View, Text, FlatList, StyleSheet, ActivityIndicator } from 'react-native'
 import { useFocusEffect } from '@react-navigation/native'
 import { IconButton } from 'react-native-paper'
 import moment from 'moment'
 import 'moment/locale/pt-br'
-
+import axios from 'axios'
+import { server } from '../../api'
 
 import { AuthContext } from '@context/Auth'
 import { ClientContext } from '@context/Client'
 import { ConsultationContext } from '@context/Consultation'
 import Consultation from '@components/Consultation'
-import dataConsult from '../../dataConsult'
 
 
 export default (props) => {
     const { user } = useContext(AuthContext)
     const { setClient } = useContext(ClientContext)
     const { setConsultation } = useContext(ConsultationContext)
-    const [consultations ] = useState(dataConsult)
+    const [consultations, setConsultations ] = useState([])
+    const [isLoading, setIsLoading] = useState(false)
+
+    const fetchConsultations = async () => {
+        try {
+            setIsLoading(true)
+            const res = await axios.get(`${server}/consultation`)
+            if (res.status === 200) {
+                setConsultations(res.data)
+            }
+            setIsLoading(false)
+        }catch(e) {
+            console.warn(e)
+            setIsLoading(false)
+        }
+    }
 
     useFocusEffect(
         useCallback(() => {
             // everytime is home, reset client e consultation
             setClient({})
+            fetchConsultations()
             setConsultation({})
         }, [])
     )
@@ -44,17 +60,23 @@ export default (props) => {
                 </View>
             </View>
             <View style={styles.content} >
-                <FlatList
+                {isLoading
+                ? <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }} >
+                    <ActivityIndicator size='large' animating={isLoading} />
+                </View>
+                : <FlatList
                     data={consultations}
-                    keyExtractor={(item) => item.id}
+                    keyExtractor={(item) => `${item.consultationDateTime}-${item.idPet}-${item.idVet}`}
                     renderItem={({ item }) => <Consultation consultation={{...item}} {...props} />}
-                />
+                />}
                 {user.employeeType === 'Attendant'
                 ? <View style={styles.addButton}>
                     <IconButton
                         icon='plus-circle'
                         size={50}
+                        color='#4C11EA'
                         onPress={() => {
+                            setConsultation({})
                             props.navigation.navigate('Consultation')
                         }}
                     />
@@ -71,7 +93,7 @@ const styles = StyleSheet.create({
     },
     topContent: {
         height: '25%',
-        backgroundColor: 'purple',
+        backgroundColor: '#4C11EA',
         justifyContent: 'center',
         alignItems: 'center',
     },

@@ -8,10 +8,6 @@ export default () => {
     return (
         <View>
             <Text>Historico Clinico</Text>
-            <Text>{consultation.id}</Text>
-            <Text>{consultation.date}</Text>
-            <Text>{consultation.vet.name}</Text>
-            <Text>{consultation.client.name}</Text>
         </View>
     )
 }
