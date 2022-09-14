@@ -26,8 +26,10 @@ export default () => {
 
     const [showModal, setShowModal] = useState(false)
 
-    const stringDateFormated = newConsultation ? '__/___/' : moment(new Date(consultation.consultationDateTime)).format('DD/MMM')
-    const stringTimeFormated = newConsultation ? '   :  ' : moment(new Date(consultation.consultationDateTime)).format('HH:mm')
+    console.log(state)
+
+    const stringDateFormated = !state.consultationDateTime ? '__/___/' : moment(new Date(state.consultationDateTime)).format('DD/MMM')
+    const stringTimeFormated = !state.consultationDateTime ? '   :  ' : moment(new Date(state.consultationDateTime)).format('HH:mm')
 
     const addConsultation = async () => {
         const consultationDateTime = setupDateTime()
@@ -91,7 +93,6 @@ export default () => {
         }
     }
 
-
     const defaultValues = () => {
         setEditField(false)
         setEditableButton(true)
@@ -101,23 +102,22 @@ export default () => {
         setEditField(true)
         setEditableButton(false)
         setNewConsultation(true)
+        setState({
+          idPet: '',
+          idVet: '',
+          price: '',  
+        })
     }
 
     useFocusEffect(
         useCallback(() => {
-            Object.keys(state).length > 0 ? defaultValues() : newConsultationValues()
-            // set date case exists
-            // if (Object.keys(consultation).length > 0) {
-            //     setAppointDate(new Date(state.consultationDateTime))
-            //     setAppointTime(new Date(state.consultationDateTime))
-            //     console.log(appointDate, appointTime)
-            // } 
+            // if state is empty, so is in create MODE
+            Object.keys(state).length > 0 ? defaultValues() : newConsultationValues() 
         },[])
     )
 
-    // returns the date with the time setup
+    // get two datetime (one for time and another for the date) and returns only ONE datetime
     const setupDateTime = () => {
-        // alterar para eceber estimeTime e o appointDate
         // convert the hours, minuts of the time to ms
         const time2Ms = 
             (appointTime.getHours() * 3600 + appointTime.getMinutes() * 60) * 1000
@@ -127,8 +127,13 @@ export default () => {
     }
 
 
-    const selectedVet = (idVet, vetName) => {
-        console.log(idVet, vetName)
+    // selected only ONE item that contains vet info
+    const selectedVet = (selectedItems) => {
+        if (selectedItems.length >= 0) {
+            const { item: vet } = selectedItems[0] 
+            setState({...state, idVet: vet.idVet, speciality: vet.speciality, vetName: vet.name})
+        }   
+  
     }
 
     return (
@@ -199,7 +204,8 @@ export default () => {
                         </View>
                     </View>
                 </View>
-                <View style={{ width: '100%', marginTop:20 }}>
+                {user.employeeType === 'Attendant'
+                ? <View style={{ width: '100%', marginTop:20 }}>
                     <View style={{ alignItems:'center' }} >
                             <Text style={{ color:'#000', fontSize: 20, fontWeight:'bold' }}>Veterinario</Text>
                     </View>
@@ -235,6 +241,7 @@ export default () => {
                         </View>
                     </View>
                 </View>
+                : null}
                 <View style={{ width: '100%', marginTop:20 }}>
                     <View style={{ alignItems:'center' }} >
                             <Text style={{ color:'#000', fontSize: 20, fontWeight:'bold' }}>Consulta</Text>
@@ -266,6 +273,11 @@ export default () => {
                         </View>
                     </View>
                 </View>
+                {user.employeeType === 'Vet' && state.status !== 'Finalizada'
+                ? <View style={{ justifyContent: 'center', alignItems: 'center' }} >
+                    <Button>BOTAO</Button>
+                </View>
+                : null}
                 <View style={{ alignItems: 'center', marginTop:20 }}>
                     <View style={{ alignItems:'center' }} >
                         <Text>Data/Hora</Text>
@@ -299,7 +311,7 @@ export default () => {
                         }} >{stringDateFormated}</Button>
                     </View>
                 </View>
-                {editableButton && !user.employeeType === 'Vet'
+                {editableButton && user.employeeType === 'Attendant'
                 ? <View style={styles.button} >
                     <IconButton
                         icon='pencil-circle'
@@ -311,7 +323,7 @@ export default () => {
                     />
                 </View> 
                 : null}
-                {!editableButton && !user.employeeType === 'Vet'
+                {!editableButton && user.employeeType === 'Attendant'
                 ? <View style={styles.doubleButton}>
                     <IconButton
                         icon='close-circle'

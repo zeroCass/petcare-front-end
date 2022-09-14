@@ -7,7 +7,7 @@ export default (props) => {
     const [selected, setSelected] = useState(false)
 
     useEffect(() => {
-        props.onSelect(props.id, selected)
+        props.onSelect(props.id, selected, props.item)
     }, [selected])
 
     return (

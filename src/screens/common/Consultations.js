@@ -21,9 +21,14 @@ export default (props) => {
     const [isLoading, setIsLoading] = useState(false)
 
     const fetchConsultations = async () => {
+        
+        // change url base on userType
+        let url = user.employeeType === 'Attendant' ? 
+            `${server}/consultation` : `${server}/consultation/${user.idvet}`
+        
         try {
             setIsLoading(true)
-            const res = await axios.get(`${server}/consultation`)
+            const res = await axios.get(url)
             if (res.status === 200) {
                 setConsultations(res.data)
             }

@@ -10,8 +10,10 @@ export default ({ navigation, consultation }) => {
     const { user } = useContext(AuthContext)
     const { setConsultation } = useContext(ConsultationContext)
     const stringDateFormatted = moment(new Date(consultation.consultationDateTime)).format('DD [de] MMMM [às] HH:mm')
+    console.log('component-consultation', consultation)
     return (
         <TouchableOpacity onPress={() => {
+            console.log('component-consultation', consultation)
             setConsultation({...consultation})
             const nextScreen = user.employeeType === 'Vet' 
                 ? 'ConsultationTab' : 'Consultation'
