@@ -1,4 +1,4 @@
-import React, { useContext, useState, useCallback } from 'react'
+import React, { useContext, useState, useCallback, useEffect } from 'react'
 import { View, Text, StyleSheet, ActivityIndicator} from 'react-native'
 import { useFocusEffect } from '@react-navigation/native'
 import { TextInput, IconButton, Button } from 'react-native-paper'
@@ -16,7 +16,7 @@ import { server } from '../../api'
 export default () => {
     const { consultation } = useContext(ConsultationContext)
     const { user } = useContext(AuthContext)
-    const [state, setState] = useState({...consultation})
+    const [state, setState] = useState({})
     const [editField, setEditField] = useState(false)
     const [editableButton, setEditableButton] = useState(true)
     const [newConsultation, setNewConsultation] = useState(false)
@@ -25,8 +25,6 @@ export default () => {
     const [isLoading, setIsLoading] = useState(false)
 
     const [showModal, setShowModal] = useState(false)
-
-    console.log(state)
 
     const stringDateFormated = !state.consultationDateTime ? '__/___/' : moment(new Date(state.consultationDateTime)).format('DD/MMM')
     const stringTimeFormated = !state.consultationDateTime ? '   :  ' : moment(new Date(state.consultationDateTime)).format('HH:mm')
@@ -97,6 +95,7 @@ export default () => {
         setEditField(false)
         setEditableButton(true)
         setNewConsultation(false)
+        setState({...consultation})
     }
     const newConsultationValues = () => {
         setEditField(true)
@@ -110,11 +109,18 @@ export default () => {
     }
 
     useFocusEffect(
+        // everytime consultation state changes: (re-create the function - usecallback)
         useCallback(() => {
             // if state is empty, so is in create MODE
-            Object.keys(state).length > 0 ? defaultValues() : newConsultationValues() 
-        },[])
+            Object.keys(consultation).length > 0 ? defaultValues() : newConsultationValues()
+            
+            // on unmount
+            return () => setState({})
+        },[consultation])
+
     )
+
+
 
     // get two datetime (one for time and another for the date) and returns only ONE datetime
     const setupDateTime = () => {

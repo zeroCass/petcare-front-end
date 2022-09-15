@@ -1,4 +1,4 @@
-import React, { useContext, useCallback, useState } from 'react'
+import React, { useContext, useCallback, useState, useEffect } from 'react'
 import { View, Text, FlatList, StyleSheet, ActivityIndicator } from 'react-native'
 import { useFocusEffect } from '@react-navigation/native'
 import { IconButton } from 'react-native-paper'
@@ -9,16 +9,16 @@ import { server } from '../../api'
 
 import { AuthContext } from '@context/Auth'
 import { ClientContext } from '@context/Client'
-import { ConsultationContext } from '@context/Consultation'
+import { ConsultationContext } from '../../context/Consultation'
 import Consultation from '@components/Consultation'
 
 
 export default (props) => {
     const { user } = useContext(AuthContext)
     const { setClient } = useContext(ClientContext)
-    const { setConsultation } = useContext(ConsultationContext)
     const [consultations, setConsultations ] = useState([])
     const [isLoading, setIsLoading] = useState(false)
+    const { consultation: cons, setConsultation } = useContext(ConsultationContext)
 
     const fetchConsultations = async () => {
         
@@ -39,10 +39,12 @@ export default (props) => {
         }
     }
 
+
     useFocusEffect(
+        // everytime is home, reset client e consultation
         useCallback(() => {
-            // everytime is home, reset client e consultation
             setClient({})
+            setConsultations([])
             fetchConsultations()
             setConsultation({})
         }, [])

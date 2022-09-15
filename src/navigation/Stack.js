@@ -25,8 +25,11 @@ export default () => {
             ) : (
             <Stack.Group>
                 <Stack.Screen name='Main' component={DrawerComponent}/>
-                <Stack.Screen name='Consultation' component={Consultation}/>
                 <Stack.Screen name='Pet' component={Pet}/>
+                {user.employeeType === 'Attendant' ?
+                    <Stack.Screen name='Consultation' component={Consultation}/>
+                : null}
+                {/* <Stack.Screen name='Consultation' component={Consultation}/> */}
             </Stack.Group>
             )}
         </Stack.Navigator>

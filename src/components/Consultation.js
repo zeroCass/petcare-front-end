@@ -3,22 +3,22 @@ import { View, Text, TouchableOpacity, StyleSheet, Dimensions } from 'react-nati
 import moment from 'moment'
 import 'moment/locale/pt-br'
 
-import { ConsultationContext } from '@context/Consultation'
+import { ConsultationContext } from '../context/Consultation'
 import { AuthContext } from '@context/Auth'
 
 export default ({ navigation, consultation }) => {
+
     const { user } = useContext(AuthContext)
-    const { setConsultation } = useContext(ConsultationContext)
+    const { consultation: cons , setConsultation } = useContext(ConsultationContext)
     const stringDateFormatted = moment(new Date(consultation.consultationDateTime)).format('DD [de] MMMM [às] HH:mm')
-    console.log('component-consultation', consultation)
+    //console.log('component-consultation', consultation)
     return (
         <TouchableOpacity onPress={() => {
-            console.log('component-consultation', consultation)
             setConsultation({...consultation})
             const nextScreen = user.employeeType === 'Vet' 
                 ? 'ConsultationTab' : 'Consultation'
             const options = user.employeeType === 'Vet' 
-                ? {screen: 'Consultation', screenName: 'Consulta'} : {}
+                ? { screen: 'Consultation', screenName: 'Consulta' }: {}
             navigation.navigate(nextScreen, options)
         }} >
             <View style={styles.container}>
