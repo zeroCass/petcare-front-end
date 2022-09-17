@@ -1,40 +1,44 @@
 import React, { useState } from 'react'
-import { View, StyleSheet, FlatList } from 'react-native'
+import { View, StyleSheet, FlatList, ActivityIndicator } from 'react-native'
 import { Searchbar, Button } from 'react-native-paper'
 
 import ItemSelect from '@components/ItemSelect'
-
-
-const docs = [
-    {
-        id: 1,
-        name: 'Marco Phenix',
-        speciality:'Medic',
-    },
-    {
-        id: 3,
-        name:'Choper' 
-    },
-]
+import axios from 'axios'
+import { server } from '../api'
 
 // props.onSelect -> function recieve from parent to send data back
 export default (props) => {
-    
+    const [vets, setVets] = useState([])
     const [selectedItems, setSelectedItems] = useState([])
     const [search, setSearch] = useState('')
+    const [isLoading, setIsloading] = useState(false)
 
-    const selectedItem = (itemId, selected) => {
-        const find = selectedItems.find(id => id === itemId)
+    const selectedItem = (itemId, selected, item) => {
+        const find = selectedItems.find(i => i.id === itemId)
         if (find && !selected) 
-            setSelectedItems(selectedItems.filter(i => i !== itemId ? true : false))
+            setSelectedItems(selectedItems.filter(i => i.id !== itemId ? true : false))
         
 
         if (!find && selected)
-            setSelectedItems([...selectedItems, itemId])
+            setSelectedItems([...selectedItems, { id: itemId, item }])
 
     }
 
-    const fetchSearch = async () => {}
+    const fetchSearch = async () => {
+        try {
+            setIsloading(true)
+            const res = await axios.get(`${server}/vet/${search}`)
+            if (res.status === 200) {
+                if (res.data.length === 0)
+                    console.warn('Nenhum resultado encontrado')
+                setVets(res.data)
+            }
+            setIsloading(false)
+        }catch(e) {
+            console.log(e)
+            setIsloading(false)
+        }
+    }
 
     return (
         <View style={styles.container}>
@@ -47,15 +51,21 @@ export default (props) => {
                 />
             </View>
             <View style={styles.content}>
-                <FlatList
-                    data={docs}
-                    keyExtractor={(item) => item.id}
+                {isLoading 
+                ? <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }} >
+                    <ActivityIndicator size='large' animating={isLoading} />
+                </View>
+                : <FlatList
+                    data={vets}
+                    keyExtractor={(item) => item.idVet}
                     renderItem={({ item }) => (
-                        <ItemSelect id={item.id} 
+                        <ItemSelect id={item.idVet} 
                             txt={item.name} 
-                            txtCenter={item.speciality} 
+                            txtCenter={item.speciality}
+                            item={item} 
                             onSelect={selectedItem}/>)}
-                />
+                />}
+                
             </View>
             <View>
                 <Button mode='contained' 

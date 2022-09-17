@@ -8,10 +8,8 @@ export default () => {
     return (
         <View>
             <Text>PET Status</Text>
-            <Text>{consultation.id}</Text>
-            <Text>{consultation.date}</Text>
-            <Text>{consultation.vet.name}</Text>
-            <Text>{consultation.client.name}</Text>
+            <Text>{consultation.consultationDateTime}</Text>
+            <Text>{consultation.idPet} - {consultation.name}</Text>
         </View>
     )
 }

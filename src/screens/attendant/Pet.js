@@ -148,11 +148,11 @@ export default ({ route }) => {
                     <View style={{ width: '100%' }} >
                         {state.idPet ?
                         <TextInput
-                            disabled={!editField}
+                            disabled={true}
                             mode='outlined'
                             label='ID'
                             placeholder='267'
-                            value={state.idPet}
+                            value={`${state.idPet}`}
                             onChangeText={(idPet) => setState({...state, idPet})}
                         />
                         : null}
