@@ -7,6 +7,10 @@ Para evitar conflitos e dores de cabeça na hora de rodar esse proejeto, eu reco
 - [Java v17](https://jdk.java.net/archive/)
 - [Nodev16](https://nodejs.org/en/blog/release/v16.16.0)
 
+É necessário usar o servidor backend desse projeto que pode ser encontrado [aqui](https://github.com/zeroCass/petcare-back-end)
+Alémd isso, o banco de dados utilizados foi o MySQL com a ferramenta MySQLWorkbench. Os script de criação do schema e procedures podem ser encontrados [aqui](https://github.com/maydMoon/petcare-database-sql-codes) 
+
+
 
 
 # TODO
