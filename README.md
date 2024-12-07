@@ -1,7 +1,16 @@
+# Implementação do trabalho final para disciplina de Banco de Dados (Unb)
+Disclaimer: Esse repositório ficou mais de 2 anos sem alterações e agora estou revisitando-o. Portanto, muitos erros e gambiarras foram feito no código base, principalmente pela falta de experiência e pouco conehcimento 
+a respeito de programação no geral na época que esse trabalho feito implementado. Futuras atualizações que serão realizadas nesse repositório serão apenas para melhorar um pouco a usabilidade e não para total refatoração.
+
+## Requesitos para rodar
+Para evitar conflitos e dores de cabeça na hora de rodar esse proejeto, eu recomendo seguir a risca as versões necessárias das seguintes tecnologias:
+- [Java v17](https://jdk.java.net/archive/)
+- [Nodev16](https://nodejs.org/en/blog/release/v16.16.0)
+
+
+
 # TODO
-
 ## Attendat
-
 ### Tela do Cliente
 
 - [ ] Na tela de Clientes, deve-se listar todos os clientes cadastrados. Caso não tenha, informar
